@@ -1,6 +1,5 @@
 data/graphs/
 scrap/
-webapp/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

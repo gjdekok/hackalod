@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kaart van Paramaribo</title>
+
+    <!-- OpenSeadragon Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/openseadragon/3.0.0/openseadragon.min.js"></script>
+    <!-- SVG Overlay Plugin -->
+    <script src="{{ url_for('static', filename='js/openseadragon-svg-overlay.js') }}"></script>
+    <script src="//d3js.org/d3.v5.min.js"></script>
+
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+        }
+        #openseadragon {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        .source-box {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            z-index: 10;
+        }
+        .source-box a {
+            color: #00aaff;
+            text-decoration: none;
+        }
+        .source-box a:hover {
+            text-decoration: underline;
+        }
+        /* Tooltip Styles */
+        .tooltip {
+            position: absolute;
+            padding: 6px 12px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            border-radius: 4px;
+            pointer-events: none;
+            font-size: 0.9em;
+            white-space: nowrap;
+            z-index: 20;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <div id="openseadragon">
+        <div class="source-box">
+            Source: <a href="http://hdl.handle.net/1887.1/item:2013596" target="_blank">Universiteit Leiden</a>
+        </div>     
+    </div>
+    <div class="tooltip" id="tooltip">This is a test!</div>
+
+    <script>
+        const viewer = OpenSeadragon({
+            id: "openseadragon",
+            prefixUrl: "https://cdnjs.cloudflare.com/ajax/libs/openseadragon/3.0.0/images/",
+            tileSources: "https://iiif.universiteitleiden.nl/iiif/2/hdl:1887.1%252Fitem:2013596",
+            defaultZoomLevel: 1.0,
+            visibilityRatio: 1,
+            constrainDuringPan: true,
+            gestureSettingsMouse: {
+                scrollToZoom: true,
+                clickToZoom: false
+            }
+        });
+    
+        viewer.addHandler("open", function() {
+    const overlay = viewer.svgOverlay();
+    const tooltip = document.getElementById('tooltip');
+    const aspectRatio = viewer.source.dimensions.x / viewer.source.dimensions.y;
+    const homeBounds = new OpenSeadragon.Rect(0.25, 0, 0.5, 0.5 / aspectRatio);
+    viewer.viewport.fitBounds(homeBounds, true);
+
+    // Original coordinates
+    const points = [
+        {x: 0.34656035218764286, y: 0.18969585822737667},
+        {x: 0.3790035936785551, y: 0.18795159793216631},
+        {x: 0.41249339134659346, y: 0.18760274587312425},
+        {x: 0.4316802545939072, y: 0.1872538938140822},
+        {x: 0.46551890432098764, y: 0.18655618969599808},
+        {x: 0.46551890432098764, y: 0.19109126646354493},
+        {x: 0.45575104666780974, y: 0.19178897058162908},
+        {x: 0.4365641834204961, y: 0.19178897058162908},
+        {x: 0.4114468351694673, y: 0.19213782264067114},
+        {x: 0.3817944101508916, y: 0.1924866746997132},
+        {x: 0.3570259139589048, y: 0.1924866746997132},
+        {x: 0.3490023166009373, y: 0.19388208293588147},
+        {x: 0.3479557604238111, y: 0.18899815410929255}
+    ];
+
+    // Convert points to string format for the `points` attribute
+    const pointsString = points.map(p => `${p.x},${p.y}`).join(" ");
+
+    // Create polygon with tooltip functionality
+    const polygon = d3.select(overlay.node()).append("polygon")
+        .attr("points", pointsString)
+        .style("fill", "blue")
+        .style("opacity", 0.7)
+        .style("cursor", "pointer")
+        .on("mouseover", function() {
+            tooltip.innerHTML = "This is a test!";  // Replace with dynamic text if needed
+            tooltip.style.display = "block";
+            tooltip.style.opacity = 1;
+        })
+        .on("mousemove", function() {
+            const viewerRect = viewer.element.getBoundingClientRect();
+            const tooltipWidth = tooltip.offsetWidth;
+            const tooltipHeight = tooltip.offsetHeight;
+            
+            tooltip.style.left = (d3.event.pageX - tooltipWidth / 2) + 'px';
+            tooltip.style.top = (d3.event.pageY - viewerRect.top - tooltipHeight - 10) + 'px';
+        })
+        .on("mouseout", function() {
+
+            tooltip.style.display = "none";
+            tooltip.style.opacity = 0;
+        });
+
+    window.addEventListener("resize", () => overlay.resize());
+});
+
+    </script>
+    
+</body>
+</html>

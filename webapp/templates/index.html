@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en" prefix="schema: http://schema.org/">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReLinking Identities</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+            background: url("/static/images/parbackground.jpg") no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        #meerInformatie {
+            background: linear-gradient(to right, #f8fafc, #e2e8f0);
+        }
+        .pattern-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url("https://www.transparenttextures.com/patterns/white-wall.png"); 
+            opacity: 0.2;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Infobox over het project -->
+    <div class="flex items-center justify-center h-screen" vocab="http://schema.org/" typeof="CreativeWork">
+        <div class="bg-white bg-opacity-80 rounded-lg shadow-lg p-8 max-w-md text-center relative">
+            <img src="/static/images/reg.jpg" alt="Wijkregisters" class="w-20 h-20 rounded-full mx-auto -mt-16 border-4 border-white shadow-md" property="image">
+            <h1 class="text-2xl font-bold text-gray-800 mt-4" property="name">ReLinking Identities</h1>
+            <div class="mt-2 text-gray-700" property="description">
+                <p>The Paramaribo Ward Registers mention the names of inhabitants of <a href="https://sws.geonames.org/3383330/">Paramaribo, Suriname</a>. However, they omit the names of enslaved individuals.</p>
+                <hr class="border-t border-white my-4 opacity-75">
+                <p>This project aims to recover their names as well using <b>Linked Open Data</b>.</p>
+            </div>
+            <div class="mt-6 flex justify-center">
+                <a href="#meerInformatie" class="text-gray-700 hover:text-gray-900 transition duration-200" property="url">
+                    <svg class="w-8 h-8 animate-bounce" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Introductie team-->
+    <div id="meerInformatie" class="min-h-screen flex flex-col items-center justify-center bg-gray-100 px-8 py-16 relative" typeof="Organization">
+        <div class="pattern-overlay"></div> 
+        <div class="max-w-3xl text-center relative z-10">
+            <h2 class="text-3xl font-bold text-gray-800 mb-8" property="name">Team Paramaribo - HackaLOD 2024</h2>
+    
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
+                
+                <div class="bg-white rounded-lg shadow-lg p-6 text-center" typeof="Person">
+                    <img src="/static/images/thunnis.jpg" alt="Thunnis van Oort" class="w-24 h-24 rounded-full mx-auto mb-4" property="image">
+                    <h3 class="text-xl font-semibold text-gray-800" property="name">Thunnis van Oort</h3>
+                    <p class="text-gray-600" property="jobTitle">Heerser</p>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-lg p-6 text-center" typeof="Person">
+                    <img src="/static/images/erik.jpg" alt="Erik Tjong Kim Sang" class="w-24 h-24 rounded-full mx-auto mb-4" property="image">
+                    <h3 class="text-xl font-semibold text-gray-800" property="name">Erik Tjong Kim Sang</h3>
+                    <p class="text-gray-600" property="jobTitle">Syntax-samurai</p>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-lg p-6 text-center" typeof="Person">
+                    <img src="/static/images/rick.jpg" alt="Rick Mourits" class="w-24 h-24 rounded-full mx-auto mb-4" property="image">
+                    <h3 class="text-xl font-semibold text-gray-800" property="name">Rick Mourits</h3>
+                    <p class="text-gray-600" property="jobTitle">Dataconnoisseur</p>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-lg p-6 text-center" typeof="Person">
+                    <img src="/static/images/iris.jpg" alt="Iris van Vlimmeren" class="w-24 h-24 rounded-full mx-auto mb-4" property="image">
+                    <h3 class="text-xl font-semibold text-gray-800" property="name">Iris van Vlimmeren</h3>
+                    <p class="text-gray-600" property="jobTitle">Verhaalkunstenaar</p>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-lg p-6 text-center" typeof="Person">
+                    <img src="/static/images/shannon.jpg" alt="Shannon van Muijden" class="w-24 h-24 rounded-full mx-auto mb-4" property="image">
+                    <h3 class="text-xl font-semibold text-gray-800" property="name">Shannon van Muijden</h3>
+                    <p class="text-gray-600" property="jobTitle">Eindbaas</p>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-lg p-6 text-center" typeof="Person">
+                    <img src="/static/images/gerhard.jpg" alt="Gerhard de Kok" class="w-24 h-24 rounded-full mx-auto mb-4" property="image">
+                    <h3 class="text-xl font-semibold text-gray-800" property="name">Gerhard de Kok</h3>
+                    <p class="text-gray-600" property="jobTitle">Vliegende Keep</p>
+                </div>
+            </div>
+            
+            <!-- Link naar site -->
+            <a href="/kaart" class="mt-8 inline-block bg-blue-500 text-white font-semibold py-2 px-6 rounded-full shadow hover:bg-blue-600 transition duration-200" property="url">
+                Naar de kaart
+            </a>
+        </div>
+    </div>
+
+</body>
+</html>
