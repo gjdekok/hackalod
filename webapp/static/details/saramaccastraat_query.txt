@@ -1,0 +1,4 @@
+SELECT ?coordinate ?qid WHERE {
+  wd:Q107435480 wdt:P625 ?coordinate.
+  BIND("Q107435480" AS ?qid)
+}

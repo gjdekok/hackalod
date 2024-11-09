@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kaart van Paramaribo</title>
+
+  <!-- OpenSeadragon -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/openseadragon/3.0.0/openseadragon.min.js"></script>
+
+  <!-- Annotorious for OpenSeadragon -->
+  <script src="https://cdn.jsdelivr.net/npm/@annotorious/openseadragon@latest/dist/annotorious-openseadragon.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@annotorious/openseadragon@latest/dist/annotorious-openseadragon.css">
+
+  <style>
+    body, html {
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+    }
+    #openseadragon {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+    /* Tooltip style */
+    .tooltip {
+      position: absolute;
+      background: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      padding: 5px;
+      border-radius: 4px;
+      display: none;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- OpenSeadragon Container -->
+  <div id="openseadragon"></div>
+
+  <!-- Tooltip container for hover message -->
+  <div id="annotation-tooltip" class="tooltip">Annotation Info</div>
+
+  <!-- Initialize OpenSeadragon and AnnotoriousOSD -->
+  <script>
+    window.onload = function() {
+      // Initialize OpenSeadragon viewer
+      var viewer = OpenSeadragon({
+        element: document.getElementById('openseadragon'),
+        prefixUrl: "https://cdnjs.cloudflare.com/ajax/libs/openseadragon/3.0.0/images/",
+        tileSources: "https://iiif.universiteitleiden.nl/iiif/2/hdl:1887.1%252Fitem:2013596",
+        crossOriginPolicy: "Anonymous" // Enable CORS for images from other domains
+      });
+
+      // Initialize AnnotoriousOSD with drawing disabled
+      const anno = AnnotoriousOSD.createOSDAnnotator(viewer, {
+        drawingEnabled: false,
+        readOnly: true,  // Make the annotation non-editable
+        style: {
+          fill: '#ff0000',
+          fillOpacity: 0.25
+        }
+      });
+
+      // Add a non-editable rectangle annotation with specified coordinates
+      anno.addAnnotation({
+        id: '7fb76422-3a8c-4c87-bbad-7c8bb68399a0',
+        body: [{ value: "This is a non-editable annotation" }], // Optional message body
+        target: {
+          selector: {
+            type: 'RECTANGLE',
+            geometry: {
+              bounds: {
+                minX: 1847.536756220238,
+                minY: 1428.399032648126,
+                maxX: 2514.5181378476423,
+                maxY: 1680.5513078540083
+              },
+              x: 1847.536756220238,
+              y: 1428.399032648126,
+              w: 666.9813816274043,
+              h: 252.15227520688222
+            }
+          }
+        }
+      });
+
+      // Tooltip element
+      const tooltip = document.getElementById('annotation-tooltip');
+
+      // Show tooltip on hover
+      anno.on('mouseEnterAnnotation', (annotation, event) => {
+        tooltip.style.left = `${event.clientX + 10}px`;
+        tooltip.style.top = `${event.clientY + 10}px`;
+        tooltip.textContent = annotation.body[0].value;  // Show annotation body or custom message
+        tooltip.style.display = 'block';
+      });
+
+      // Hide tooltip when no longer hovering
+      anno.on('mouseLeaveAnnotation', () => {
+        tooltip.style.display = 'none';
+      });
+    }
+  </script>
+</body>
+</html>

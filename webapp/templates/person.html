@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Details for {{ person.naam }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/openseadragon/3.0.0/openseadragon.min.js"></script>
+</head>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+
+<div class="container mx-auto p-8">
+    <h1 class="text-4xl font-bold text-center text-gray-800 mb-8">Details for {{ person.naam }}</h1>
+
+    <div class="bg-white shadow-lg rounded-lg p-6">
+        <p class="text-gray-700 text-lg leading-relaxed mb-4">
+            {{ person.naam }} woonde in 1846 op de {{ person.adres }}. Ze woonde daar bij {{ person.owner_voornaam }} {{ person.owner_achternaam }}.
+        </p>
+        
+        <p class="text-gray-600 text-lg leading-relaxed">
+            <strong>Wardregister Index:</strong> {{ person.Wardregister_index }}
+        </p>
+        <p class="text-gray-600 text-lg leading-relaxed">
+            <strong>Kaart ID:</strong> {{ person.Kaart_Id }}
+        </p>
+        
+        <!-- IIIF Image Viewer -->
+        <div id="openseadragon1" class="mt-8 rounded-lg shadow" style="width: 100%; height: 500px;"></div>
+        
+        <!-- Text under viewer -->
+        <p class="text-center text-gray-500 mt-4">Rechtstreeks uit het Nationaal Archief (origineel in Suriname)</p>
+        
+        <!-- Back Button -->
+        <div class="mt-8">
+            <a href="/details?place={{ place }}" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded">
+                Terug naar de {{ place|capitalize }} 
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    OpenSeadragon({
+        id: "openseadragon1",
+        prefixUrl: "https://cdnjs.cloudflare.com/ajax/libs/openseadragon/3.0.0/images/",
+        tileSources: "{{ person.iiif }}"
+    });
+</script>
+
+</body>
+</html>

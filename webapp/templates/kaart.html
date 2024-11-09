@@ -17,11 +17,13 @@
             margin: 0;
             overflow: hidden;
         }
+
         #openseadragon {
             width: 100%;
             height: 100%;
             position: relative;
         }
+
         .source-box {
             position: absolute;
             bottom: 10px;
@@ -33,14 +35,16 @@
             font-size: 0.9em;
             z-index: 10;
         }
+
         .source-box a {
             color: #00aaff;
             text-decoration: none;
         }
+
         .source-box a:hover {
             text-decoration: underline;
         }
-  
+
         .tooltip {
             position: absolute;
             padding: 6px 12px;
@@ -54,15 +58,36 @@
             opacity: 0;
             transition: opacity 0.2s ease-in-out;
         }
+
+        .info-box {
+            position: absolute;
+            top: 20%;
+            right: 100px;
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            width: 250px;
+            border-radius: 5px;
+            z-index: 15;
+            font-size: 0.9em;
+        }
     </style>
 </head>
 <body>
     <div id="openseadragon">
         <div class="source-box">
-            Source: <a href="http://hdl.handle.net/1887.1/item:2013596" target="_blank">Universiteit Leiden</a>
+            Bron: <a href="http://hdl.handle.net/1887.1/item:2013596" target="_blank">Universiteit Leiden</a>
         </div>     
     </div>
-    <div class="tooltip" id="tooltip">This is a test!</div>
+
+    <!-- Static Text Box -->
+    <div class="info-box">
+        <h2 class="text-lg font-semibold">Welkom in Paramaribo</h2>
+        <p class="mt-2 text-sm">Klik op een straat om naar de bewoners te gaan.</p>
+    </div>
+
+    <div class="tooltip" id="tooltip"></div>
 
     <script>
         const viewer = OpenSeadragon({
@@ -79,58 +104,79 @@
         });
     
         viewer.addHandler("open", function() {
-    const overlay = viewer.svgOverlay();
-    const tooltip = document.getElementById('tooltip');
-    const aspectRatio = viewer.source.dimensions.x / viewer.source.dimensions.y;
-    const homeBounds = new OpenSeadragon.Rect(0.25, 0, 0.5, 0.5 / aspectRatio);
-    viewer.viewport.fitBounds(homeBounds, true);
-
-
-    const points = [
-    {x: 0.34734085596394537, y: 0.18286744339527009}, 
-    {x: 0.3493502438240277, y: 0.19572752569979684}, 
-    {x: 0.464689106992752, y: 0.19532564812778036}, 
-    {x: 0.4630815967046861, y: 0.1796524228191384},
-    ];
-
-
-    const pointsString = points.map(p => `${p.x},${p.y}`).join(" ");
-
-
-    const polygon = d3.select(overlay.node()).append("polygon")
-        .attr("points", pointsString)
-        .style("fill", "blue")
-        .style("opacity", 0.7)
-        .style("cursor", "pointer")
-        .on("mouseover", function() {
-            tooltip.innerHTML = "Welkom op de Hofstraat!"; 
-            tooltip.style.display = "block";
-            tooltip.style.opacity = 1;
-        })
-        .on("mousemove", function() {
-            const viewerRect = viewer.element.getBoundingClientRect();
-            const tooltipWidth = tooltip.offsetWidth;
-            const tooltipHeight = tooltip.offsetHeight;
-            
-            tooltip.style.left = (d3.event.pageX - tooltipWidth / 2) + 'px';
-            tooltip.style.top = (d3.event.pageY - viewerRect.top - tooltipHeight - 10) + 'px';
-        })
-        .on("mouseout", function() {
-
-            tooltip.style.display = "none";
-            tooltip.style.opacity = 0;
-        });
-
-    window.addEventListener("resize", () => overlay.resize());
-});
-
-viewer.addHandler("canvas-click", function(event) {
-    const point = viewer.viewport.pointFromPixel(event.position);
-    console.log(`\{x: ${point.x}, y: ${point.y}},`);
-});
-
-
-    </script>
+            const overlay = viewer.svgOverlay();
+            const tooltip = document.getElementById('tooltip');
+            const homeBounds = new OpenSeadragon.Rect(0.25, 0, 0.5, 0.5 / (viewer.source.dimensions.x / viewer.source.dimensions.y));
+            viewer.viewport.fitBounds(homeBounds, true);
     
+            function addPolygon(points, color, hoverText, link) {
+                const pointsString = points.map(p => `${p.x},${p.y}`).join(" ");
+                
+                const polygon = d3.select(overlay.node()).append("polygon")
+                    .attr("points", pointsString)
+                    .style("fill", color)
+                    .style("opacity", 0.3)
+                    .style("cursor", "pointer")
+                    .on("mouseover", function() {
+                        d3.select(this).style("opacity", 0.7);
+                        tooltip.innerHTML = hoverText;
+                        tooltip.style.display = "block";
+                        tooltip.style.opacity = 1;
+                    })
+                    .on("mousemove", function() {
+                        const viewerRect = viewer.element.getBoundingClientRect();
+                        const tooltipWidth = tooltip.offsetWidth;
+                        const tooltipHeight = tooltip.offsetHeight;
+                        
+                        tooltip.style.left = (d3.event.pageX - tooltipWidth / 2) + 'px';
+                        tooltip.style.top = (d3.event.pageY - viewerRect.top - tooltipHeight - 10) + 'px';
+                    })
+                    .on("mouseout", function() {
+                        d3.select(this).style("opacity", 0.3);
+                        tooltip.style.display = "none";
+                        tooltip.style.opacity = 0;
+                    })
+                    .on("click", function() {
+                        window.location.href = link;
+                    });
+            }
+    
+            // Add polygons for each area
+            addPolygon([
+                {x: 0.4811170778562928, y: 0.2922236763202658}, 
+                {x: 0.4700252568686385, y: 0.3086202812585374},
+                {x: 0.5688871395846878, y: 0.4147159602708831}, 
+                {x: 0.5809434667451817, y: 0.39590808990051274}
+            ], "blue", "Ontdek de Waterkant.", "/details?place=waterkant");
+    
+            addPolygon([
+                {x: 0.394675925925926, y: 0.24310378086419754}, 
+                {x: 0.3906250000000001, y: 0.25699266975308643}, 
+                {x: 0.46412037037037046, y: 0.302710262345679}, 
+                {x: 0.47337962962962976, y: 0.28592785493827166}
+            ], "red", "Ontdek de Saramaccastraat.", "/details?place=saramaccastraat");
+    
+            addPolygon([
+                {x: 0.45717592592592604, y: 0.11176840420667587}, 
+                {x: 0.46122685185185197, y: 0.27264803383630554}, 
+                {x: 0.47916666666666674, y: 0.2714906264288981}, 
+                {x: 0.4780092592592593, y: 0.11003229309556475}
+            ], "green", "Ontdek de Steenbakkersgracht.", "/details?place=steenbakkersgracht");
+    
+            addPolygon([
+                {x: 0.47685185185185186, y: 0.27470942393057973},
+                {x: 0.4907407407407407, y: 0.28744090541206124},
+                {x: 0.5405092592592592, y: 0.2388297943009501}, 
+                {x: 0.5219907407407407, y: 0.22088997948613528}
+            ], "purple", "Ontdek de Steenbakkerijstraat.", "/details?place=steenbakkerijstraat");
+    
+            window.addEventListener("resize", () => overlay.resize());
+        });
+    
+        viewer.addHandler("canvas-click", function(event) {
+            const point = viewer.viewport.pointFromPixel(event.position);
+            console.log(`{x: ${point.x}, y: ${point.y}},`);
+        });
+    </script>
 </body>
 </html>

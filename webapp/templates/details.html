@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Details over de {{ place|capitalize }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        .carousel img {
+            max-height: 192px;
+            width: 100%;
+            object-fit: cover;
+        }
+        .carousel-controls {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .carousel-controls button {
+            background-color: #4A5568;
+            border: none;
+            padding: 4px 8px;
+            color: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        #map {
+            height: 200px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+
+<div class="container mx-auto p-8">
+    <h1 class="text-4xl font-bold text-center text-gray-800 mb-8">Welkom op de {{ place|capitalize }}</h1>
+
+    <div class="flex flex-col lg:flex-row gap-8">
+        <!-- Left Side Block -->
+        <div class="bg-white shadow-lg rounded-lg p-6 lg:w-2/3">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Inwonenden van de {{ place|capitalize }}</h2>
+            <p class="text-gray-600 text-lg leading-relaxed">
+                De volgende personen woonden in 1846 op de {{ place|capitalize }} en hebben we dankzij onze linkset opnieuw een naam gegeven:
+            </p>
+            <ul id="person-list" class="text-gray-600 text-lg leading-relaxed mt-4">
+                <!-- List of persons will be loaded here dynamically -->
+            </ul>
+
+            <!-- Additional content for 'Steenbakkerijstraat' -->
+            <div id="extra-content" class="text-gray-600 text-lg leading-relaxed mt-8">
+                <!-- Content will be added here if place is 'Steenbakkerijstraat' -->
+            </div>
+
+            <!-- Back Button -->
+            <div class="mt-8">
+                <a href="/kaart" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded">
+                    Terug naar de kaart
+                </a>
+            </div>
+        </div>
+
+        <!-- Right Side Blocks -->
+        <div class="flex flex-col gap-6 lg:w-1/3">
+            <!-- Upper Block with OpenStreetMap -->
+            <div class="bg-white shadow-lg rounded-lg p-6">
+                <h3 class="text-xl font-semibold text-gray-700 mb-4">Kaart</h3>
+                <div id="map"></div>
+                <p id="wikidata-link" class="text-sm text-gray-600 mt-2">
+                    Rechtstreeks uit <a href="" target="_blank" class="text-blue-600 underline">Wikidata</a>
+                </p>
+            </div>
+
+            <!-- Lower Block with Carousel -->
+            <div class="bg-white shadow-lg rounded-lg p-6">
+                <h3 class="text-xl font-semibold text-gray-700 mb-4">Afbeeldingen</h3>
+                <div class="carousel relative">
+                    <img id="carousel-image" src="" alt="Carousel image" class="rounded-lg" />
+                </div>
+                <div class="carousel-controls">
+                    <button onclick="prevImage()">Previous</button>
+                    <button onclick="nextImage()">Next</button>
+                </div>
+                <p class="text-sm text-gray-600 mt-4">Rechtstreeks uit het Rijksmuseum</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const place = "{{ place }}";
+        
+        // Fetch the list of persons for the place
+        fetch(`/fetch_persons/${place}`)
+            .then(response => response.json())
+            .then(persons => {
+                if (persons.error) {
+                    console.error("Error loading persons:", persons.error);
+                    return;
+                }
+
+                const personList = document.getElementById("person-list");
+                personList.innerHTML = persons.map(person => `
+                    <li>
+                        <a href="/person/${person.id}?place=${place}" class="text-blue-600 underline">
+                            ${person.adres}: ${person.naam}
+                        </a>
+                    </li>
+                `).join("");
+            })
+            .catch(error => {
+                console.error("Error fetching persons:", error);
+            });
+            
+        // Fetch the SPARQL query from the file
+        fetch(`/fetch_wikidata_query/${place}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.error("Error loading query:", data.error);
+                    return;
+                }
+
+                const query = data.query;
+                const encodedQuery = encodeURIComponent(query);
+
+                // Fetch data from Wikidata using the query
+                fetch(`/fetch_wikidata?query=${encodedQuery}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const mapElement = document.getElementById("map");
+                        const wikidataLink = document.getElementById("wikidata-link").querySelector("a");
+
+                        if (data.results.bindings.length > 0) {
+                            const coordinate = data.results.bindings[0].coordinate.value;
+                            const qid = data.results.bindings[0].qid.value;
+
+                            // Parse coordinates in the "Point(longitude latitude)" format
+                            const coords = coordinate.match(/Point\(([-\d.]+) ([-\d.]+)\)/);
+                            if (coords) {
+                                const longitude = parseFloat(coords[1]);
+                                const latitude = parseFloat(coords[2]);
+
+                                // Initialize Leaflet map
+                                const map = L.map(mapElement).setView([latitude, longitude], 15);
+
+                                L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                                    maxZoom: 19,
+                                }).addTo(map);
+
+                                L.marker([latitude, longitude]).addTo(map)
+                                    .bindPopup("Tegenwoordige locatie")
+                                    .openPopup();
+
+                                // Update Wikidata link with QID
+                                wikidataLink.href = `https://www.wikidata.org/wiki/${qid}`;
+                            } else {
+                                mapElement.innerHTML = "<p>Coordinates not found.</p>";
+                            }
+                        } else {
+                            mapElement.innerHTML = "<p>Coordinates not found.</p>";
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error fetching coordinates:", error);
+                        document.getElementById("map").innerText = "Failed to load map.";
+                    });
+            })
+            .catch(error => {
+                console.error("Error fetching query:", error);
+            });
+
+        // Fetch images for the carousel
+        fetch(`/fetch_images/${place}`)
+            .then(response => response.json())
+            .then(images => {
+                if (images.error) {
+                    console.error("Error loading images:", images.error);
+                    return;
+                }
+
+                const imgElement = document.getElementById('carousel-image');
+                let currentIndex = 0;
+
+                function showImage(index) {
+                    imgElement.src = images[index];
+                }
+
+                function prevImage() {
+                    currentIndex = (currentIndex - 1 + images.length) % images.length;
+                    showImage(currentIndex);
+                }
+
+                function nextImage() {
+                    currentIndex = (currentIndex + 1) % images.length;
+                    showImage(currentIndex);
+                }
+
+                // Show the first image initially
+                showImage(currentIndex);
+
+                // Attach functions to buttons
+                document.querySelector(".carousel-controls button:nth-child(1)").onclick = prevImage;
+                document.querySelector(".carousel-controls button:nth-child(2)").onclick = nextImage;
+            })
+            .catch(error => {
+                console.error("Error fetching carousel images:", error);
+            });
+
+// Check if place is 'Steenbakkerijstraat', 'Waterkant', 'Saramaccastraat', or 'Steenbakkersgracht' and add extra content
+if (place.toLowerCase() === "steenbakkerijstraat") {
+    const extraContent = document.getElementById("extra-content");
+    extraContent.innerHTML = `
+        <h2 class="text-2xl font-semibold text-gray-700 mb-4">Verhalen uit de Steenbakkerijstraat</h2>
+        <p>
+            Op 4 mei 1832 werd Joseph verkocht aan ene Moses Nunes Monsato, een 53-jarige koopman van Sefardisch-Joodse afkomst, 
+            die verhuisde naar Steenbakkerijstraat 150. Op 30 juli 1841 meldde de Surinaamsche Courant dat Joseph, 
+            een bekwame timmerman, was weggelopen. In de krant werd hij beschreven als "klein van gestalte met een kalende kruin". 
+            In 1843 dook Joseph opnieuw op in de koloniale bronnen toen hij werd verkocht aan de weduwe N.S. de Leon.
+        </p>
+        <a href="https://www.delpher.nl/nl/kranten/view?coll=ddd&identifier=ddd:010670971:mpeg21:p002" target="_blank" class="block mt-4">
+            <img src="https://imageviewer.kb.nl/ImagingService/imagingService?id=ddd%3A010670971%3Ampeg21%3Ap002%3Aimage&colour=fefe56&r=0&s=0.7942658870545876&x=1526&y=1463&w=742&h=373" 
+                 alt="Krantenartikel Steenbakkerijstraat" 
+                 class="rounded-lg shadow-md hover:opacity-90 transition-opacity duration-300"
+                 style="width: 50%; max-width: 300px;">
+        </a>
+        <p class="text-sm text-gray-600 mt-2">Rechtstreeks uit Delpher</p>
+    `;
+} else if (place.toLowerCase() === "waterkant") {
+    const extraContent = document.getElementById("extra-content");
+    extraContent.innerHTML = `
+        <h2 class="text-2xl font-semibold text-gray-700 mb-4">Verhalen uit de Waterkant</h2>
+        <p>
+            In 1838 werd Rotterdam gekocht door Anna H. Jacobs, een dame van 68 jaar oud. We weten weinig over het leven van Rotterdam, 
+            maar op 22 juli 1841 meldde de Surinaamsche Courant dat Rotterdam “enkele dagen” vermist was. 
+            Zijn “eigenaresse” Anna H. Jacobs meldt dat de vinder “de gebruikelijke vangstbeloning” zal ontvangen 
+            als hij Rotterdam bij haar weet terug te brengen. Verdere vermeldingen over Rotterdam blijven uit, 
+            totdat hij uit de koloniale administratie werd verwijderd, wat erop wijst dat zijn ontsnappingspoging succesvol was.
+        </p>
+        <a href="https://www.delpher.nl/nl/kranten/view?coll=ddd&identifier=ddd:010947494:mpeg21:a0008" target="_blank" class="block mt-4">
+            <img src="https://imageviewer.kb.nl/ImagingService/imagingService?id=ddd%3A010947494%3Ampeg21%3Ap002%3Aimage&colour=fefe56&x=932&y=2131&r=0&s=0.9437708006279404&w=922&h=445" 
+                 alt="Krantenartikel Waterkant" 
+                 class="rounded-lg shadow-md hover:opacity-90 transition-opacity duration-300"
+                 style="width: 50%; max-width: 300px;">
+        </a>
+        <p class="text-sm text-gray-600 mt-2">Rechtstreeks uit Delpher</p>
+    `;
+} else if (place.toLowerCase() === "saramaccastraat") {
+    const extraContent = document.getElementById("extra-content");
+    extraContent.innerHTML = `
+        <h2 class="text-2xl font-semibold text-gray-700 mb-4">Verhalen uit de Saramaccastraat</h2>
+        <p>
+            Christiaan werd vijf keer in zijn leven verkocht. In 1841 kwam hij in het “bezit” van de broers Buhk, 
+            die aan de Saramaccastraat woonden. Enkele maanden later werd Christiaan door zijn eigenaren als vermist opgegeven. 
+            De Nieuwe Surinaamsche Courant meldt op 11 december 1841 dat de persoon die Christiaan terugbrengt een vindersloon van 30 gulden zou ontvangen. 
+            In 1846 verscheen Christiaan opnieuw in de slavenregisters toen hij werd verkocht aan P.F. Labadie, die enkele huizen verderop woonde 
+            en naar de Saramaccastraat nummer 33 verhuisde.
+        </p>
+        <a href="https://www.delpher.nl/nl/kranten/view?coll=ddd&identifier=ddd:010670812:mpeg21:a0008" target="_blank" class="block mt-4">
+            <img src="https://imageviewer.kb.nl/ImagingService/imagingService?id=ddd%3A010670812%3Ampeg21%3Ap002%3Aimage&colour=fefe56&x=1738&y=162&r=0&s=0.8836938242962887&w=840&h=360" 
+                 alt="Krantenartikel Saramaccastraat" 
+                 class="rounded-lg shadow-md hover:opacity-90 transition-opacity duration-300"
+                 style="width: 50%; max-width: 300px;">
+        </a>
+        <p class="text-sm text-gray-600 mt-2">Rechtstreeks uit Delpher</p>
+    `;
+} else if (place.toLowerCase() === "steenbakkersgracht") {
+    const extraContent = document.getElementById("extra-content");
+    extraContent.innerHTML = `
+        <h2 class="text-2xl font-semibold text-gray-700 mb-4">Verhalen uit de Steenbakkersgracht</h2>
+        <p>
+            We weten niet wanneer Louisa werd geboren, maar ze werd voor het eerst vermeld in de slavenregisters toen ze werd verkocht aan A.J. Worsdell. 
+            Sindsdien werd Louisa minstens vier keer verkocht. In 1839 was Louisa “te koop” op een openbare veiling en werd ze gekocht door 
+            Anna Maria Forth voor 405 gulden en verhuisde naar de Steenbakkersgracht. Anna Maria Forth, geboren in 1812, was lid van de Nederlandse 
+            Hervormde kerk en werd in de wijkregisters vermeld als een persoon van kleur die drie tot slaaf gemaakten “bezat”. 
+            In 1840 werd Louisa opnieuw verkocht aan Anna Petronella en verhuisde naar de Gravenstraat nummer 23. Daar stierf Louisa in 1841.
+        </p>
+    `;
+}
+
+
+
+
+    });
+</script>
+
+</body>
+</html>
