@@ -5,12 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kaart van Paramaribo</title>
 
-    <!-- OpenSeadragon Library -->
+    <!-- OSD, Overlay en Tailwind  -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/openseadragon/3.0.0/openseadragon.min.js"></script>
-    <!-- SVG Overlay Plugin -->
     <script src="{{ url_for('static', filename='js/openseadragon-svg-overlay.js') }}"></script>
     <script src="//d3js.org/d3.v5.min.js"></script>
-
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     
     <style>
@@ -42,7 +40,7 @@
         .source-box a:hover {
             text-decoration: underline;
         }
-        /* Tooltip Styles */
+  
         .tooltip {
             position: absolute;
             padding: 6px 12px;
@@ -87,34 +85,25 @@
     const homeBounds = new OpenSeadragon.Rect(0.25, 0, 0.5, 0.5 / aspectRatio);
     viewer.viewport.fitBounds(homeBounds, true);
 
-    // Original coordinates
+
     const points = [
-        {x: 0.34656035218764286, y: 0.18969585822737667},
-        {x: 0.3790035936785551, y: 0.18795159793216631},
-        {x: 0.41249339134659346, y: 0.18760274587312425},
-        {x: 0.4316802545939072, y: 0.1872538938140822},
-        {x: 0.46551890432098764, y: 0.18655618969599808},
-        {x: 0.46551890432098764, y: 0.19109126646354493},
-        {x: 0.45575104666780974, y: 0.19178897058162908},
-        {x: 0.4365641834204961, y: 0.19178897058162908},
-        {x: 0.4114468351694673, y: 0.19213782264067114},
-        {x: 0.3817944101508916, y: 0.1924866746997132},
-        {x: 0.3570259139589048, y: 0.1924866746997132},
-        {x: 0.3490023166009373, y: 0.19388208293588147},
-        {x: 0.3479557604238111, y: 0.18899815410929255}
+    {x: 0.34734085596394537, y: 0.18286744339527009}, 
+    {x: 0.3493502438240277, y: 0.19572752569979684}, 
+    {x: 0.464689106992752, y: 0.19532564812778036}, 
+    {x: 0.4630815967046861, y: 0.1796524228191384},
     ];
 
-    // Convert points to string format for the `points` attribute
+
     const pointsString = points.map(p => `${p.x},${p.y}`).join(" ");
 
-    // Create polygon with tooltip functionality
+
     const polygon = d3.select(overlay.node()).append("polygon")
         .attr("points", pointsString)
         .style("fill", "blue")
         .style("opacity", 0.7)
         .style("cursor", "pointer")
         .on("mouseover", function() {
-            tooltip.innerHTML = "This is a test!";  // Replace with dynamic text if needed
+            tooltip.innerHTML = "Welkom op de Hofstraat!"; 
             tooltip.style.display = "block";
             tooltip.style.opacity = 1;
         })
@@ -134,6 +123,12 @@
 
     window.addEventListener("resize", () => overlay.resize());
 });
+
+viewer.addHandler("canvas-click", function(event) {
+    const point = viewer.viewport.pointFromPixel(event.position);
+    console.log(`\{x: ${point.x}, y: ${point.y}},`);
+});
+
 
     </script>
     
